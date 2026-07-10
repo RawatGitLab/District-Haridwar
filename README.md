@@ -1,98 +1,89 @@
-🌍 District Haridwar - GIS Platform
-A live, interactive geospatial web application designed for district planners and administrators. It visualizes critical geographical data for Haridwar, including administrative boundaries, river streams, and village locations, by synchronizing spatial shapefiles from a secure database.
+# 🗺️ District Haridwar – GIS Viewer
+
+An interactive, map-based portal for Almora District, built with React, TypeScript, Leaflet, and the Google Gemini API. The app lets citizens and administrators explore geospatial data, layers, and district information through a fast, modern web interface.
+
+Live demo: https://district-Haridwar.onrender.com/
+
+📖 About
+This repository hosts the Haridwar GIS Viewer — a web application for visualizing geographic and administrative data for Haridwar District, Uttarakhand. It combines an interactive Leaflet map with an Express/Node backend and Gemini-powered AI capabilities.
 
 ✨ Features
-Live Data Synchronization: Connects securely to a MongoDB database to download and display the latest geographical boundaries.
-
-Core Spatial Layers: Visualizes key administrative and natural features of District Haridwar.
-
-Administrative Boundaries: Displays district and sub-district (tehsil/block) borders.
-
-River Streams: Maps the major river systems flowing through the region.
-
-Village Locations: Pinpoints all villages within the district.
-
-Planner & Administrator Focus: Designed to support informed decision-making and planning.
-
-🚀 Live Demo
-Access the live application here: https://district-haridwar.onrender.com/
-
+🗺️ Interactive mapping with Leaflet and proj4 for coordinate/projection handling
+⚛️ Modern frontend built with React 19, TypeScript, and Vite
+🤖 AI-assisted features powered by the @google/genai (Gemini) SDK
+🎨 Styled with Tailwind CSS and animated with Motion
+🖥️ Node/Express backend (server.ts) serving the app and API routes
+🗄️ MongoDB integration for persisting application data
+🎛️ Icons via Lucide
 🛠️ Tech Stack
-Backend: Node.js, Express.js (assumed)
-
-Database: MongoDB (for storing and streaming geospatial data)
-
-Frontend: HTML, CSS, JavaScript (rendered on the client-side)
-
-Geospatial Libraries: Likely uses Mapbox GL JS, Leaflet, or a similar library for map rendering.
-
-Hosting: Render.com
-
-💻 Installation & Setup (For Local Development)
-To run this project locally, follow these steps:
-
+Layer	Technology
+Frontend	React 19, TypeScript, Vite, Tailwind CSS
+Mapping	Leaflet, proj4
+AI	Google Gemini (@google/genai)
+Backend	Node.js, Express, tsx
+Database	MongoDB
+Animation / UI	Motion, Lucide React
+Tooling	esbuild, TypeScript compiler
+📂 Project Structure
+District-Haridwar/
+├── src/                  # Application source (components, map logic, etc.)
+├── index.html            # App entry HTML
+├── server.ts             # Express server entry point
+├── check-properties.js   # Utility/validation script
+├── metadata.json         # App metadata (used by AI Studio)
+├── vite.config.ts        # Vite build configuration
+├── tsconfig.json         # TypeScript configuration
+├── .env.example           # Environment variable template
+├── package.json
+└── README.md
+🚀 Getting Started
 Prerequisites
-Node.js (v16 or later)
+Node.js (LTS recommended)
+npm
+A Gemini API key
+Installation
+# Clone the repository
+git clone https://github.com/RawatGitLab/District-Haridwar.git
 
-npm or yarn
+# Navigate into the project directory
+cd District-Haridwar
 
-A MongoDB instance (local or cloud-based, e.g., MongoDB Atlas)
-
-Steps
-Clone the repository:
-
-bash
-git clone [https://github.com/your-username/your-repo-name.git]
-cd your-repo-name
-Install dependencies:
-
-bash
+# Install dependencies
 npm install
-# or
-yarn install
-Set up environment variables:
-Create a .env file in the root directory and add your MongoDB connection string:
+Environment Variables
+Copy .env.example to .env and fill in the required values:
 
-text
-MONGODB_URI=your_mongodb_connection_string
-PORT=3000 # (Optional, defaults to 3000)
-Populate the database (If required):
-This step depends on your specific setup. You may need to run a script to import GeoJSON or Shapefile data into your MongoDB database.
+cp .env.example .env
+Variable	Description
+GEMINI_API_KEY	Required for Gemini AI API calls
+APP_URL	The URL where the app is hosted (used for self-referential links/callbacks)
+Available Scripts
+Command	Description
+npm run dev	Start the development server (tsx server.ts)
+npm run build	Build the frontend with Vite and bundle the server with esbuild
+npm start	Run the production build (dist/server.cjs)
+npm run preview	Preview the production Vite build
+npm run lint	Type-check the project (tsc --noEmit)
+npm run clean	Remove build artifacts
+Running Locally
+npm run dev
+Then open the URL printed in your terminal (typically http://localhost:5173 or the port configured by Vite/Express).
 
-Start the development server:
-
-bash
+Building for Production
+npm run build
 npm start
-# or
-yarn start
-The application should now be running on http://localhost:3000 (or the port you specified).
-
-📁 Project Structure (Example)
-text
-├── public/              # Static client-side files
-│   ├── css/             # Stylesheets
-│   ├── js/              # Frontend JavaScript logic
-│   └── index.html       # Main HTML entry point
-├── server/              # Backend server code
-│   ├── models/          # Database models (e.g., for MongoDB)
-│   ├── routes/          # API routes
-│   └── server.js        # Main server file
-├── .env                 # Environment variables (ignored by Git)
-├── .gitignore           # Git ignore file
-├── package.json         # Project dependencies and scripts
-└── README.md            # This file
 🤝 Contributing
-Contributions are welcome! Please follow these steps:
+Contributions are welcome!
 
-Fork the Project
+🍴 Fork the repository
+🌿 Create a feature branch: git checkout -b feature/AmazingFeature
+💾 Commit your changes: git commit -m 'Add some AmazingFeature'
+📤 Push to the branch: git push origin feature/AmazingFeature
+🎉 Open a Pull Request
+📜 License
+This project is licensed under the MIT License. See the LICENSE file for details.
 
-Create your Feature Branch (git checkout -b feature/AmazingFeature)
+📞 Contact
+For queries or issues related to this project, reach out via the repository's Issues page.
 
-Commit your Changes (git commit -m 'Add some AmazingFeature')
-
-Push to the Branch (git push origin feature/AmazingFeature)
-
-Open a Pull Request
-
-📄 License
-Distributed under the MIT License. See LICENSE file for more information.
+Built for Haridwar District 🏔️
