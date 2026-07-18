@@ -380,15 +380,25 @@ export default function Sidebar({
       {/* Sub-controls: Color & Opacity (only when layer is enabled) */}
       {layer.visible && (
         <div className="flex items-center gap-3 pl-8 pb-1 pt-0.5">
-          {/* Color Picker Indicator */}
-          <div className="flex items-center gap-1 shrink-0">
+          {/* Color Picker & Text Input Component */}
+          <div className="flex items-center gap-1.5 shrink-0 bg-slate-100 rounded-md px-1.5 py-0.5 border border-slate-200">
+            <div className="relative w-4 h-4 rounded overflow-hidden border border-slate-300 shadow-sm shrink-0">
+              <input
+                type="color"
+                id={`color-${layer.id}`}
+                value={layer.color.startsWith('#') && layer.color.length === 7 ? layer.color : '#ffffff'}
+                onChange={(e) => updateLayerColor(layer.id, e.target.value)}
+                className="absolute -top-1 -left-1 w-6 h-6 rounded cursor-pointer border-0 p-0 block bg-transparent"
+                title="Choose color"
+              />
+            </div>
             <input
-              type="color"
-              id={`color-${layer.id}`}
+              type="text"
               value={layer.color}
               onChange={(e) => updateLayerColor(layer.id, e.target.value)}
-              className="w-4 h-4 rounded cursor-pointer border border-slate-300 p-0 block bg-transparent"
-              title="Change layer color"
+              className="w-14 text-[10px] font-mono font-bold bg-transparent border-0 p-0 text-slate-700 uppercase focus:ring-0 focus:outline-none"
+              placeholder="#FFFFFF"
+              title="Enter color hex code"
             />
           </div>
 

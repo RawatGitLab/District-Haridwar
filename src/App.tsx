@@ -26,7 +26,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   // Map & Interaction state
-  const [activeBaseMap, setActiveBaseMap] = useState<string>("osm");
+  const [activeBaseMap, setActiveBaseMap] = useState<string>("satellite");
   const [selectedFeature, setSelectedFeature] = useState<GisFeature | null>(null);
   const [hoveredFeature, setHoveredFeature] = useState<GisFeature | null>(null);
   const [isTableCollapsed, setIsTableCollapsed] = useState<boolean>(true);
@@ -208,35 +208,31 @@ export default function App() {
       let fillOpacity = 0.4;
 
       const lowerName = name.toLowerCase();
-      if (lowerName.includes("village")) {
+
+      if (type === "polygon") {
+        color = "#ffffff";
+        fillColor = "transparent";
+        weight = 2.5;
+        opacity = 1.0;
+        fillOpacity = 0;
+      } else if (type === "linestring") {
+        color = lowerName.includes("river") || lowerName.includes("canal") || lowerName.includes("water") ? "#0ea5e9" : "#6366f1";
+        fillColor = "transparent";
+        weight = 2.5;
+        opacity = 1.0;
+        fillOpacity = 0;
+      } else if (lowerName.includes("village")) {
         color = "#ec4899"; // bright pink villages selector
         fillColor = "#f472b6";
         weight = 1.5;
         opacity = 0.95;
+        fillOpacity = 0.5;
       } else if (lowerName.includes("river") || lowerName.includes("canal") || lowerName.includes("water")) {
         color = "#0ea5e9"; // stream sky blue
         fillColor = "#38bdf8";
         weight = 2.5;
         opacity = 1.0;
-        fillOpacity = 0.1;
-      } else if (lowerName.includes("district") || lowerName.includes("boundary")) {
-        color = "#a16207"; // Golden brown outline
-        fillColor = "#fbbf24"; // Mustard polygon fill
-        weight = 2.5;
-        opacity = 0.9;
-        fillOpacity = 0.55; // Solid background core
-      } else if (lowerName.includes("block")) {
-        color = "#c2410c"; // Rust dark
-        fillColor = "#fdba74"; // Peach block
-        weight = 2.0;
-        opacity = 0.8;
-        fillOpacity = 0.25;
-      } else if (lowerName.includes("tehsil") || lowerName.includes("tahsil")) {
-        color = "#15803d"; // Deep forest green
-        fillColor = "#86efac"; // Mint tehsil
-        weight = 2.0;
-        opacity = 0.85;
-        fillOpacity = 0.3;
+        fillOpacity = 0;
       } else {
         // Dynamic palette for any other shapefile imported
         const hue = (index * 137.5) % 360; 
@@ -244,10 +240,12 @@ export default function App() {
         fillColor = `hsl(${hue}, 70%, 65%)`;
       }
 
+      const isDistrictBoundary = name === "District-Boundary" || lowerName === "district-boundary" || lowerName.includes("district-boundary");
+
       return {
         id: `layer-${index}-${name.replace(/\s+/g, '-')}`,
         name: name,
-        visible: name === "District-Boundary" || name === "Block-Boundary" || name === "Landuse-Agriculture",
+        visible: isDistrictBoundary,
         type: type,
         color: color,
         fillColor: fillColor,
