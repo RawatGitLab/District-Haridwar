@@ -3,6 +3,8 @@ import { GisFeature, LayerConfig, BaseMap } from "./types";
 import Sidebar from "./components/Sidebar";
 import MapComponent from "./components/MapComponent";
 import AttributeTable from "./components/AttributeTable";
+import ThemeToggle from "./components/ThemeToggle";
+import Login from "./components/Login";
 import { 
   Database, 
   Layers, 
@@ -16,7 +18,9 @@ import {
   Sparkles, 
   Info,
   ServerCrash,
-  RefreshCw
+  RefreshCw,
+  LogOut,
+  UserCheck
 } from "lucide-react";
 
 export default function App() {
@@ -25,8 +29,43 @@ export default function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return (
+      localStorage.getItem("haridwar_gis_auth") === "true" ||
+      sessionStorage.getItem("haridwar_gis_auth") === "true"
+    );
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem("haridwar_gis_auth");
+    localStorage.removeItem("haridwar_gis_user");
+    sessionStorage.removeItem("haridwar_gis_auth");
+    setIsAuthenticated(false);
+  };
+
+  // Theme state (light mode default)
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const saved = localStorage.getItem("haridwar_gis_theme_v2");
+    return saved === "light" || saved === "dark" ? saved : "light";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("haridwar_gis_theme_v2", theme);
+    const root = document.documentElement;
+    const body = document.body;
+    root.setAttribute("data-theme", theme);
+    if (theme === "dark") {
+      root.classList.add("dark");
+      body.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+      body.classList.remove("dark");
+    }
+  }, [theme]);
+
   // Map & Interaction state
-  const [activeBaseMap, setActiveBaseMap] = useState<string>("satellite");
+  const [activeBaseMap, setActiveBaseMap] = useState<string>("osm");
   const [selectedFeature, setSelectedFeature] = useState<GisFeature | null>(null);
   const [hoveredFeature, setHoveredFeature] = useState<GisFeature | null>(null);
   const [isTableCollapsed, setIsTableCollapsed] = useState<boolean>(true);
@@ -210,9 +249,9 @@ export default function App() {
       const lowerName = name.toLowerCase();
 
       if (type === "polygon") {
-        color = "#ffffff";
+        color = "#000000";
         fillColor = "transparent";
-        weight = 2.5;
+        weight = 2;
         opacity = 1.0;
         fillOpacity = 0;
       } else if (type === "linestring") {
@@ -316,26 +355,30 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-100 overflow-hidden font-sans">
+    <div className="flex flex-col h-screen w-screen bg-slate-100 dark:bg-slate-950 overflow-hidden font-sans transition-colors">
       {/* Visual Navigation Header */}
-      <header className="h-14 bg-slate-900 text-slate-100 px-4 flex items-center justify-between border-b border-slate-950 shrink-0 select-none shadow-md">
+      <header className="h-14 relative z-[1050] bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shrink-0 select-none shadow-sm transition-colors">
         <div className="flex items-center space-x-3">
           <div className="bg-indigo-600 p-1.5 rounded-lg text-white shadow-sm flex items-center justify-center">
             <Compass className="w-5 h-5 text-indigo-100" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-extrabold tracking-tight text-white uppercase">Geography For District Planners/Administrators</span>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30 animate-pulse">
+              <span className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white uppercase">Geography For District Planners/Administrators</span>
+              <span className="text-[10px] bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30 animate-pulse">
                 Live Server
               </span>
             </div>
-            <h2 className="text-base font-bold tracking-tight text-slate-200">District Haridwar</h2>
+            <h2 className="text-base font-bold tracking-tight text-slate-600 dark:text-slate-200">District Haridwar</h2>
           </div>
         </div>
 
         {/* Global summary specs */}
-        <div className="flex items-center space-x-3 text-xs font-semibold text-slate-300">
+        <div className="flex items-center space-x-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
+          <ThemeToggle
+            theme={theme}
+            onToggle={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+          />
           <button
             onClick={() => fetchFeatures(true)}
             disabled={loading}
@@ -345,14 +388,24 @@ export default function App() {
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             <span>Sync Database</span>
           </button>
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-800 px-2.5 py-1.5 rounded-md">
-            <Layers className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Layers: <strong className="text-white font-mono">{layers.length}</strong></span>
+          <div className="hidden md:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-md">
+            <Layers className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+            <span>Layers: <strong className="text-slate-900 dark:text-white font-mono">{layers.length}</strong></span>
           </div>
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-800 px-2.5 py-1.5 rounded-md">
-            <Database className="w-3.5 h-3.5 text-pink-400" />
-            <span>Entities: <strong className="text-white font-mono">{features.length}</strong></span>
+          <div className="hidden md:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-md">
+            <Database className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400" />
+            <span>Entities: <strong className="text-slate-900 dark:text-white font-mono">{features.length}</strong></span>
           </div>
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white border border-red-600 hover:border-red-700 font-bold px-2.5 py-1.5 rounded-lg text-xs shadow-sm transition duration-150 cursor-pointer select-none"
+              title="Lock / Logout from Haridwar GIS Session"
+            >
+              <LogOut className="w-3.5 h-3.5 text-white" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -418,6 +471,7 @@ export default function App() {
               setMeasureMode={setMeasureMode}
               measurePoints={measurePoints}
               setMeasurePoints={setMeasurePoints}
+              theme={theme}
             />
 
             {/* Center Map Workboard */}
@@ -439,6 +493,7 @@ export default function App() {
               zoomToLayerName={zoomToLayerName}
               clearZoomToLayer={() => setZoomToLayerName(null)}
               toggleLayer={toggleLayer}
+              theme={theme}
             />
 
             {/* Right Pane Attribute Table */}
@@ -454,6 +509,14 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* Translucent Login Screen */}
+      {!isAuthenticated && (
+        <Login
+          onLoginSuccess={() => setIsAuthenticated(true)}
+          theme={theme}
+        />
+      )}
     </div>
   );
 }

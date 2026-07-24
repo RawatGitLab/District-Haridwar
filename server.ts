@@ -298,6 +298,21 @@ fetchAndProcessFeatures().catch((err) => {
   console.error("Failed background pre-fetch on startup:", err);
 });
 
+app.use(express.json());
+
+// API: Authentication endpoint
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body || {};
+  const validUsername = process.env.VITE_APP_USERNAME;
+  const validPassword = process.env.VITE_APP_PASSWORD;
+
+  if (username === validUsername && password === validPassword) {
+    return res.json({ success: true, message: "Authentication successful", username: validUsername });
+  } else {
+    return res.status(401).json({ success: false, message: "Invalid username or password" });
+  }
+});
+
 // API: Get all features
 app.get("/api/features", async (req, res) => {
   try {

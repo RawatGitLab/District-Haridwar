@@ -21,6 +21,7 @@ interface MapComponentProps {
   zoomToLayerName: string | null;
   clearZoomToLayer: () => void;
   toggleLayer: (id: string) => void;
+  theme: "light" | "dark";
 }
 
 const isLatLngValid = (latlng: any): boolean => {
@@ -118,7 +119,8 @@ export default function MapComponent({
   setMeasurePoints,
   zoomToLayerName,
   clearZoomToLayer,
-  toggleLayer
+  toggleLayer,
+  theme
 }: MapComponentProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -277,7 +279,7 @@ export default function MapComponent({
           const isPolygon = layerConf.type === "polygon";
           const isLine = layerConf.type === "linestring";
           existingLayer.setStyle({
-            color: layerConf.color,
+            color: isPolygon ? "#000000" : layerConf.color,
             fillColor: isPolygon ? "transparent" : (layerConf.fillColor || layerConf.color),
             weight: layerConf.weight,
             opacity: layerConf.opacity,
@@ -315,10 +317,11 @@ export default function MapComponent({
         const geoJsonLayer = L.geoJSON(geoJsonData, {
           interactive: measureMode === "none",
           style: (feature: any) => {
-            const isPolygon = layerConf.type === "polygon";
-            const isLine = layerConf.type === "linestring";
+            const geomType = feature?.geometry?.type?.toLowerCase() || "";
+            const isPolygon = layerConf.type === "polygon" || geomType.includes("polygon");
+            const isLine = layerConf.type === "linestring" || geomType.includes("line");
             return {
-              color: layerConf.color,
+              color: isPolygon ? "#000000" : layerConf.color,
               fillColor: isPolygon ? "transparent" : (layerConf.fillColor || layerConf.color),
               weight: layerConf.weight,
               opacity: layerConf.opacity,
@@ -468,7 +471,7 @@ export default function MapComponent({
     }
   }, [zoomToLayerName, layers, featuresByLayer, clearZoomToLayer, toggleLayer]);
 
-  // 4. Handle Programmatic Highlighting when selectedFeature changes
+  // 4. Handle Programmatic Highlighting when selectedFeature or theme changes
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -487,23 +490,29 @@ export default function MapComponent({
     const label = selectedFeature.properties.name || selectedFeature.properties.Name || selectedFeature.properties.village_name || selectedFeature.properties.Village_Name || "";
     setMapSearchQuery(label);
 
+    const isDark = theme === "dark";
+    // Marked annotation colors change based on active theme
+    const annotationColor = isDark ? "#f59e0b" : "#dc2626"; // Vibrant Amber in dark theme, Deep Red in light theme
+    const annotationFill = isDark ? "#fde047" : "#fecaca"; // Light Yellow in dark theme, Soft Red in light theme
+    const pointMarkerFill = isDark ? "#fbbf24" : "#ef4444";
+
     try {
       // Find the geometry and create a high contrast flashing highlight above it
       const highlightLayer = L.geoJSON(selectedFeature as any, {
         style: {
-          color: "#dc2626", // Deep Red
-          fillColor: "#fecaca",
+          color: annotationColor,
+          fillColor: annotationFill,
           weight: 4,
           opacity: 1,
-          fillOpacity: 0.5,
+          fillOpacity: 0.6,
         },
         pointToLayer: (feature: any, latlng: L.LatLng) => {
           return L.circle(latlng, {
             radius: 80, // larger indicator circle
-            color: "#dc2626",
-            fillColor: "#ef4444",
+            color: annotationColor,
+            fillColor: pointMarkerFill,
             weight: 3,
-            fillOpacity: 0.4,
+            fillOpacity: 0.6,
           });
         },
       });
@@ -534,7 +543,7 @@ export default function MapComponent({
     } catch (err) {
       console.warn("Failed to highlight feature safely:", err);
     }
-  }, [selectedFeature]);
+  }, [selectedFeature, theme]);
 
   // 4.1 Render active measurement polylines/polygons/points
   useEffect(() => {
@@ -552,6 +561,11 @@ export default function MapComponent({
     if (measureMode === "none") return;
 
     const latlngs = measurePoints.map((p) => L.latLng(p.lat, p.lng));
+    const isDark = theme === "dark";
+
+    const distLineColor = isDark ? "#fb7185" : "#e11d48"; // Rose-400 in dark, Rose-600 in light
+    const areaLineColor = isDark ? "#34d399" : "#059669"; // Emerald-400 in dark, Emerald-600 in light
+    const areaFillColor = isDark ? "#10b981" : "#10b981";
 
     // 1. Draw connecting line segments/polygons
     if (latlngs.length > 0) {
@@ -564,7 +578,7 @@ export default function MapComponent({
         
         if (polylinePoints.length >= 2) {
           L.polyline(polylinePoints, {
-            color: "#e11d48", // rose-600
+            color: distLineColor,
             dashArray: "6, 8",
             weight: 3.5,
             opacity: 0.9,
@@ -579,9 +593,9 @@ export default function MapComponent({
         
         if (polygonPoints.length >= 2) {
           L.polygon(polygonPoints, {
-            color: "#059669", // emerald-600
-            fillColor: "#10b981", // emerald-500
-            fillOpacity: 0.25,
+            color: areaLineColor,
+            fillColor: areaFillColor,
+            fillOpacity: isDark ? 0.35 : 0.25,
             dashArray: "6, 8",
             weight: 3.5,
             opacity: 0.9,
@@ -594,7 +608,7 @@ export default function MapComponent({
         const marker = L.circleMarker(latlng, {
           radius: 7,
           color: "#ffffff",
-          fillColor: measureMode === "distance" ? "#e11d48" : "#059669",
+          fillColor: measureMode === "distance" ? distLineColor : areaLineColor,
           weight: 2,
           opacity: 1,
           fillOpacity: 1,
@@ -624,7 +638,9 @@ export default function MapComponent({
         marker.bindTooltip(tooltipText, {
           permanent: true,
           direction: "top",
-          className: "bg-white text-slate-800 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200 shadow-sm select-none",
+          className: isDark
+            ? "bg-slate-900 text-slate-100 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-700 shadow-sm select-none"
+            : "bg-white text-slate-800 font-sans text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200 shadow-sm select-none",
           offset: [0, -5],
         });
       });
@@ -670,7 +686,7 @@ export default function MapComponent({
           icon: L.divIcon({
             className: "bg-transparent border-0 flex items-center justify-center pointer-events-none",
             html: `
-              <div class="bg-emerald-950/90 text-emerald-100 font-sans text-[10px] font-bold py-1 px-2 rounded border border-emerald-500 shadow-md whitespace-nowrap min-w-0 select-none">
+              <div class="${isDark ? "bg-slate-900/95 text-emerald-400 border-emerald-500/60" : "bg-emerald-950/90 text-emerald-100 border-emerald-500"} font-sans text-[10px] font-bold py-1 px-2 rounded border shadow-md whitespace-nowrap min-w-0 select-none">
                 📐 Area: ${displayArea}
               </div>
             `,
@@ -679,7 +695,7 @@ export default function MapComponent({
         }).addTo(group);
       }
     }
-  }, [measurePoints, measureMode, mouseCoords]);
+  }, [measurePoints, measureMode, mouseCoords, theme]);
 
   // 4.2 Listener for adding measurement points on map click
   useEffect(() => {
@@ -743,21 +759,21 @@ export default function MapComponent({
   };
 
   return (
-    <div className="relative flex-1 bg-slate-100 flex flex-col h-full min-w-0">
+    <div className="relative flex-1 bg-slate-100 dark:bg-slate-950 flex flex-col h-full min-w-0">
       {/* Map Element */}
       <div id="gis-map" ref={mapContainerRef} className={`flex-1 w-full h-full z-0 pointer-events-auto ${measureMode !== "none" ? "cursor-crosshair" : ""}`} />
 
       {/* Floating Coordinate Status Bar */}
-      <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur border border-slate-200 shadow-sm px-3 py-1.5 rounded-md flex items-center gap-4 text-xs font-mono text-slate-600">
+      <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-800 shadow-sm px-3 py-1.5 rounded-md flex items-center gap-4 text-xs font-mono text-slate-600 dark:text-slate-300">
         <div className="flex items-center gap-1.5">
-          <Move className="w-3.5 h-3.5 text-slate-400" />
-          <span>X (Lng): <strong ref={lngRef} className="text-slate-800">---</strong></span>
-          <span className="text-slate-300">|</span>
-          <span>Y (Lat): <strong ref={latRef} className="text-slate-800">---</strong></span>
+          <Move className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+          <span>X (Lng): <strong ref={lngRef} className="text-slate-800 dark:text-slate-100">---</strong></span>
+          <span className="text-slate-300 dark:text-slate-700">|</span>
+          <span>Y (Lat): <strong ref={latRef} className="text-slate-800 dark:text-slate-100">---</strong></span>
         </div>
-        <div className="h-3 w-px bg-slate-200" />
-        <div className="text-[11px] font-semibold text-slate-500">
-          Zoom: <span className="text-indigo-600">{zoomLevel}</span>
+        <div className="h-3 w-px bg-slate-200 dark:bg-slate-700" />
+        <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+          Zoom: <span className="text-indigo-600 dark:text-indigo-400">{zoomLevel}</span>
         </div>
       </div>
 
@@ -766,7 +782,7 @@ export default function MapComponent({
         <button
           onClick={handleZoomToDistrict}
           title="Zoom to Full District Extent"
-          className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-indigo-600 rounded-lg shadow-sm font-semibold text-xs flex items-center justify-center gap-1.5 transition-all duration-150"
+          className="p-2.5 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg shadow-sm font-semibold text-xs flex items-center justify-center gap-1.5 transition-all duration-150 cursor-pointer"
         >
           <Maximize2 className="w-4 h-4" />
           <span className="hidden sm:inline">Fit District Extent</span>
@@ -775,11 +791,11 @@ export default function MapComponent({
 
       {/* Floating Spatial Search Bar */}
       <div className="absolute top-4 left-4 z-[1001] w-80 font-sans">
-        <div className="relative flex items-center bg-white/95 backdrop-blur border border-slate-200 rounded-lg shadow-md transition-shadow duration-200 focus-within:shadow-lg focus-within:border-indigo-400">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+        <div className="relative flex items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-slate-200 dark:border-slate-800 rounded-lg shadow-md transition-shadow duration-200 focus-within:shadow-lg focus-within:border-indigo-400 dark:focus-within:border-indigo-500">
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 pointer-events-none" />
           <input
             type="text"
-            className="w-full text-xs pl-9 pr-8 py-2.5 bg-transparent rounded-lg text-slate-700 placeholder-slate-400 font-semibold focus:outline-none"
+            className="w-full text-xs pl-9 pr-8 py-2.5 bg-transparent rounded-lg text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 font-semibold focus:outline-none"
             placeholder="Search villages / boundaries..."
             value={mapSearchQuery}
             onChange={(e) => {
@@ -798,18 +814,18 @@ export default function MapComponent({
                 setMapSearchQuery("");
                 setShowMapSuggestions(false);
               }}
-              className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition-colors"
+              className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <span className="absolute right-3 text-[9px] font-bold text-slate-300 pointer-events-none tracking-widest font-mono select-none">GIS</span>
+            <span className="absolute right-3 text-[9px] font-bold text-slate-300 dark:text-slate-600 pointer-events-none tracking-widest font-mono select-none">GIS</span>
           )}
         </div>
 
         {/* Suggestion Dropdown Panel */}
         {showMapSuggestions && filteredSearchFeatures.length > 0 && (
-          <div className="absolute left-0 right-0 mt-1.5 bg-white/95 backdrop-blur border border-slate-200 rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto z-[1002] divide-y divide-slate-100">
+          <div className="absolute left-0 right-0 mt-1.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto z-[1002] divide-y divide-slate-100 dark:divide-slate-800">
             {filteredSearchFeatures.map((feat) => {
               const name = feat.properties.name || feat.properties.Name || feat.properties.village_name || feat.properties.Village_Name || "Unlabeled";
               const layerName = feat.properties.layer || feat.properties.Layer || feat.properties.LAYER || "Boundary";
@@ -823,13 +839,13 @@ export default function MapComponent({
                     onFeatureSelect(feat);
                     setIsTableCollapsed(false);
                   }}
-                  className="w-full text-left px-3.5 py-2.5 hover:bg-indigo-50/70 active:bg-indigo-100 text-xs text-slate-700 font-medium transition-colors flex items-center justify-between gap-1 border-none bg-transparent cursor-pointer"
+                  className="w-full text-left px-3.5 py-2.5 hover:bg-indigo-50/70 dark:hover:bg-indigo-950/70 active:bg-indigo-100 dark:active:bg-indigo-900/80 text-xs text-slate-700 dark:text-slate-200 font-medium transition-colors flex items-center justify-between gap-1 border-none bg-transparent cursor-pointer"
                 >
                   <span className="flex items-center gap-2 truncate">
                     <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                    <span className="truncate text-slate-800 font-semibold">{name}</span>
+                    <span className="truncate text-slate-800 dark:text-slate-100 font-semibold">{name}</span>
                   </span>
-                  <span className="text-[9px] uppercase tracking-wider bg-slate-100 text-slate-400 font-bold px-1.5 py-0.5 rounded font-mono shrink-0">
+                  <span className="text-[9px] uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 font-bold px-1.5 py-0.5 rounded font-mono shrink-0">
                     {layerName.replace("USN-", "").replace("Almora-", "").replace("Haridwar-", "").replace("-Boundary", "")}
                   </span>
                 </button>

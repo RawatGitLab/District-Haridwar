@@ -178,11 +178,11 @@ export default function AttributeTable({
 
   if (isCollapsed) {
     return (
-      <div className="w-12 border-l border-slate-200 bg-white flex flex-col items-center pt-16 pb-4 shrink-0 transition-all duration-300">
+      <div className="w-12 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col items-center pt-16 pb-4 shrink-0 transition-all duration-300">
         <button
           onClick={() => setIsCollapsed(false)}
           title="Open Attribute Table"
-          className="p-2 text-slate-600 hover:text-indigo-600 rounded-md hover:bg-indigo-50 border border-slate-200 bg-slate-50 shadow-sm transition duration-150 mt-4 mb-8"
+          className="p-2 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-md hover:bg-indigo-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shadow-sm transition duration-150 mt-4 mb-8"
         >
           <Maximize2 className="w-4 h-4" />
         </button>
@@ -195,14 +195,14 @@ export default function AttributeTable({
   }
 
   return (
-    <div className="w-[450px] border-l border-slate-200 bg-white flex flex-col h-full shrink-0 shadow-sm font-sans transition-all duration-300">
+    <div className="w-[450px] border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shrink-0 shadow-sm font-sans transition-all duration-300">
       {/* Table Header Controls */}
-      <div className="p-4 border-b border-slate-200 bg-white space-y-3">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Table className="w-5 h-5 text-indigo-600" />
+            <Table className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             <div>
-              <h2 className="text-sm font-bold text-slate-800 leading-none">Attribute Table</h2>
+              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">Attribute Table</h2>
               <p className="text-[10px] text-slate-400 mt-0.5">Explore feature details, properties, and stats</p>
             </div>
           </div>
@@ -210,14 +210,14 @@ export default function AttributeTable({
             <button
               onClick={() => setIsFormCollapsed(!isFormCollapsed)}
               title={isFormCollapsed ? "Expand Filters" : "Collapse Filters"}
-              className="p-1.5 text-slate-500 hover:text-slate-800 rounded-md hover:bg-slate-50 transition duration-150 border border-slate-200 flex items-center justify-center"
+              className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition duration-150 border border-slate-200 dark:border-slate-700 flex items-center justify-center"
             >
               {isFormCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={() => setIsCollapsed(true)}
               title="Minimize panel"
-              className="p-1.5 text-slate-500 hover:text-slate-800 rounded-md hover:bg-slate-50 transition duration-150 border border-transparent"
+              className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition duration-150 border border-transparent"
             >
               <Minimize2 className="w-3.5 h-3.5" />
             </button>
